@@ -18,13 +18,13 @@ namespace Controllers
         [SerializeField] private ScreenManager screenManager;
         public ScreenManager ScreenManager => screenManager;
 
-        [SerializeField] private GoogleService googleService;
+        private GoogleService googleService;
         public GoogleService GoogleService => googleService;
 
-        [SerializeField] private FacebookService facebookService;
+        private FacebookService facebookService;
         public FacebookService FacebookService => facebookService;
         
-        [SerializeField] private TwitterService twitterService;
+        private TwitterService twitterService;
         public TwitterService TwitterService => twitterService;
         
         private void Awake()

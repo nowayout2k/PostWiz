@@ -51,11 +51,11 @@ namespace Youtube
         GoogleSignIn.DefaultInstance.Disconnect();
       }
 
-      private void OnAuthenticationFinished(System.Threading.Tasks.Task<GoogleSignInUser> task) 
+      private void OnAuthenticationFinished(Task<GoogleSignInUser> task) 
       {
         if (task.IsFaulted) 
         {
-          using (IEnumerator<System.Exception> enumerator = task.Exception.InnerExceptions.GetEnumerator()) 
+          using (IEnumerator<Exception> enumerator = task.Exception.InnerExceptions.GetEnumerator()) 
           {
             if (enumerator.MoveNext()) 
             {

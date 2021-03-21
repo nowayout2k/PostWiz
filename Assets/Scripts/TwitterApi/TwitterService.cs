@@ -6,6 +6,7 @@ namespace TwitterApi
 {
     public class TwitterService
     {
+        public TwitterSession TwitterSession => Twitter.Session;
 
         public void Initialize()
         {
