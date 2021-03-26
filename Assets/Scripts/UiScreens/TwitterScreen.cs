@@ -26,7 +26,8 @@ namespace Screens
         }
         public void Post()
         {
-            twitterService.StartComposer(twitterService.TwitterSession, null, tweetText.text, ParseHashtags(), PostSuccessCallback, PostFailureCallback);
+            Debug.Log("Tweet: " + tweetText.text);
+            twitterService.StartComposer(null, tweetText.text, ParseHashtags(), PostSuccessCallback, PostFailureCallback);
         }
 
         private string[] ParseHashtags()
@@ -34,18 +35,18 @@ namespace Screens
             var text = hashTagText.text;
  
             var textArray = text.Split(new []{' ', ','}, StringSplitOptions.RemoveEmptyEntries);
- 
+            Debug.Log("Hashtags: " + textArray);
             return textArray;
         }
 
         private void PostSuccessCallback(string s)
         {
-            
+            Debug.Log("Post Successful!");
         }
 
         private void PostFailureCallback(ApiError error)
         {
-            
+            Debug.Log("Post Failure!");
         }
 
     }

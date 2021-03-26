@@ -27,9 +27,9 @@ namespace TwitterApi
             }
         }
 
-        public void StartComposer(TwitterSession session, String imageUri, string text, string[] hashtags, Action<string> successCallback = null, Action<ApiError> failureCallback = null, Action cancelCallback = null)
+        public void StartComposer(String imageUri, string text, string[] hashtags, Action<string> successCallback = null, Action<ApiError> failureCallback = null, Action cancelCallback = null)
         {
-            Twitter.Compose(session, imageUri, 
+            Twitter.Compose(TwitterSession, imageUri, 
                 text, 
                 hashtags,
                 successCallback,
