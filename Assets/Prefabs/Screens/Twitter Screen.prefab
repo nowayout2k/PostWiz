@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 22493e257488c4d858a0f5cc9c2aedf8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tweetText: {fileID: 0}
-  hashTagText: {fileID: 0}
+  tweetIF: {fileID: 3945359335316248535}
+  hashTagIF: {fileID: 8710869254034721722}
 --- !u!1001 &4045744440818795093
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -497,6 +497,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1129993838800944418, guid: 368829882bb0443058e661e4ded2716f,
+        type: 3}
+      propertyPath: m_Name
+      value: TweetInputField (TMP)
+      objectReference: {fileID: 0}
     - target: {fileID: 1656167163818726909, guid: 368829882bb0443058e661e4ded2716f,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -739,3 +744,27 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 368829882bb0443058e661e4ded2716f, type: 3}
+--- !u!114 &3945359335316248535 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4801126689537264573, guid: 368829882bb0443058e661e4ded2716f,
+    type: 3}
+  m_PrefabInstance: {fileID: 8386190827290877034}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &8710869254034721722 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 901429450528479184, guid: 368829882bb0443058e661e4ded2716f,
+    type: 3}
+  m_PrefabInstance: {fileID: 8386190827290877034}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2da0c512f12947e489f739169773d7ca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

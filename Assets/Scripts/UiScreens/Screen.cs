@@ -12,7 +12,7 @@ namespace UiScreens
 
         public virtual bool IsScreenActive => CanvasGroup.alpha > 0;
         
-        private void Awake()
+        protected virtual void Awake()
         {
             CanvasGroup = GetComponent<CanvasGroup>();
         }

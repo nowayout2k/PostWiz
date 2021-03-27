@@ -7,7 +7,9 @@ using TMPro;
 using TwitterApi;
 using TwitterKit.Unity;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
+using Utility;
 using Screen = UiScreens.Screen;
 
 namespace Screens
@@ -16,29 +18,21 @@ namespace Screens
     {
         public override ScreenType ScreenType => ScreenType.Twitter;
 
-        [SerializeField] private TMP_InputField tweetText;
-        [SerializeField] private TMP_InputField hashTagText;
+        [FormerlySerializedAs("tweetText")] [SerializeField] private TMP_InputField tweetIF;
+        [FormerlySerializedAs("hashTagText")] [SerializeField] private TMP_InputField hashTagIF;
 
         private TwitterService twitterService;
-        private void Awake()
+        protected override void Awake()
         {
+            base.Awake();
             twitterService = AppController.Instance.TwitterService;
         }
         public void Post()
         {
-            Debug.Log("Tweet: " + tweetText.text);
-            twitterService.StartComposer(null, tweetText.text, ParseHashtags(), PostSuccessCallback, PostFailureCallback);
+            twitterService.StartComposer(null, tweetIF.text, StringParser.ParseHashtags(hashTagIF.text), PostSuccessCallback, PostFailureCallback);
+            Debug.Log("Tweet: " + tweetIF.text);
         }
-
-        private string[] ParseHashtags()
-        {
-            var text = hashTagText.text;
  
-            var textArray = text.Split(new []{' ', ','}, StringSplitOptions.RemoveEmptyEntries);
-            Debug.Log("Hashtags: " + textArray);
-            return textArray;
-        }
-
         private void PostSuccessCallback(string s)
         {
             Debug.Log("Post Successful!");
