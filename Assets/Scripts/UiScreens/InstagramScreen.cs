@@ -1,13 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Design;
 using System.Linq;
 using Controllers;
+using DeadMosquito.AndroidGoodies;
 using Enums;
 using Facebook;
 using Facebook.Unity;
 using TMPro;
 using Unity.Notifications.iOS;
+using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 using Utility;
 using Screen = UiScreens.Screen;
 
@@ -21,6 +25,7 @@ namespace Screens
          [SerializeField] private TMP_InputField hashTagIF;
          [SerializeField] private TMP_Dropdown pageDropdown;
          [SerializeField] private TextMeshProUGUI igUserIdText;
+         [SerializeField] private Image selectedImage;
          
          private List<FbPage> cachedFbPages;
          private FacebookService facebookService;
@@ -50,9 +55,16 @@ namespace Screens
              facebookService.FbLogin -= OnLogin;
              facebookService.ReceivedUserPages -= PopulateDropdown;
          }
+         
 
          public void PostImageToInstagram()
          {
+             if (selectedImage.sprite == null)
+             {
+                 Debug.Log("You must select an image before posting to instagram!");
+                 return;
+             }
+
              var hashtags = StringParser.ParseHashtags(hashTagIF.text);
              var hashtagString = string.Join(" ", hashtags);
              var concatMessage = captionIF.text + "  " + hashtagString;
@@ -60,7 +72,7 @@ namespace Screens
              facebookService.CreateIgImageContainer(igUserId, new IgImageContainerData()
              {
                  //TODO: use user selected image url
-                 ImageUrl = "https://memoryhollow.files.wordpress.com/2013/10/bronze_fonz.jpg",
+                 ImageUrl = "",
                  Caption = concatMessage,
                  UserTags = new List<IgImageContainerData.UserTag>()
              }, CreateImageContainerCallback);
@@ -111,6 +123,15 @@ namespace Screens
          {
              Debug.Log($"Instagram post {(success? "success" :"Failure")}");
          }
- 
+
+         public void OpenNativeImageGallery()
+         {
+             NativeOperationsHelper.OpenImageGallery(ImageResultSize.Max512, ReceivedImageFromGallery);
+         }
+
+         private void ReceivedImageFromGallery(Texture2D texture)
+         {
+             selectedImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
+         }
     }
 }

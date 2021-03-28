@@ -100,7 +100,7 @@ namespace Google {
       }
     }
 
-    private GoogleSignIn(GoogleSignInImpl impl) {
+    internal GoogleSignIn(GoogleSignInImpl impl) {
       this.impl = impl;
     }
 
