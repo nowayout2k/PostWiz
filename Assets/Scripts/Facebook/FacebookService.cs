@@ -1,18 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using Facebook.Unity;
-using UnityEditor;
 using UnityEngine;
 
 namespace Facebook
 {
     public class FacebookService
     {
+        public AccessToken AccessToken => AccessToken.CurrentAccessToken;
         public string AccessTokenString => AccessToken.CurrentAccessToken.TokenString;
         public bool IsLoggedIn => FB.IsLoggedIn;
         public string UserId => AccessToken.CurrentAccessToken.UserId;
+ 
+
+        public delegate void OnFbLogin(bool success, IEnumerable<string> permissions);
+        public event OnFbLogin FbLogin;
         
+        public delegate void OnReceivedUserPages(List<FbPage> pages);
+        public event OnReceivedUserPages ReceivedUserPages;
+
+
         public void Initialize()
         {
             if (!FB.IsInitialized)
@@ -32,7 +39,7 @@ namespace Facebook
                 Debug.Log("Failed to Initialize the Facebook SDK");
             }
         }
-
+ 
         public void FacebookLogin()
         {
             var permissions = new List<string>
@@ -59,24 +66,55 @@ namespace Facebook
 
         private void FbLoginComplete(ILoginResult result)
         {
-            if (FB.IsLoggedIn) 
+            FbLogin?.Invoke(FB.IsLoggedIn, AccessToken.CurrentAccessToken?.Permissions);
+            if (FB.IsLoggedIn)
             {
-                Debug.Log($"Access Token: {UserId}, Granted permissions: {string.Join(",", AccessToken.CurrentAccessToken.Permissions)}");
+                GetUserPages(UserPagesReceived);
+                Debug.Log($"Access Token: {UserId}, Granted permissions: {string.Join(",", AccessToken.Permissions)}");
             } 
             else 
             {
                 Debug.Log("User cancelled login");
             }
         }
+        
+        private void UserPagesReceived(List<FbPage> pages)
+        {
+            ReceivedUserPages?.Invoke(pages);
+            Debug.Log("Received user pages");
+        }
 
         public void Logout()
         {
             FB.LogOut();
+            Debug.Log("Logged out of FB");
+        }
+
+        public void GetIgUser(string pageId, Action<string> callback)
+        {
+            FB.API($"/{pageId}?fields=instagram_business_account&access_token={AccessTokenString}", HttpMethod.GET, (r) =>
+            {
+                if (r.ResultDictionary.ContainsKey("instagram_business_account"))
+                {
+                    if (r.ResultDictionary["instagram_business_account"] is Dictionary<string, object> dict)
+                    {
+                        if(dict.ContainsKey("id"))
+                        {
+                            var id = Convert.ToString(dict["id"]);
+                            Debug.Log($"IG user id is: {id}");
+                            callback.Invoke(id);
+                            return;
+                        }
+                    }
+                }
+                Debug.Log($"Could not find an IG user Id");
+                callback.Invoke(null);
+            });
         }
 
         public void GetUserPages(Action<List<FbPage>> callback)
         {
-            FB.API($"/{UserId}/accounts", HttpMethod.GET, (r) =>
+            FB.API($"/{UserId}/accounts?access_token={AccessTokenString}", HttpMethod.GET, (r) =>
             {
                 var fbPages = new List<FbPage>();
                 if (r.ResultDictionary.ContainsKey("data"))
@@ -162,7 +200,7 @@ namespace Facebook
         /// <param name="igUserId"></param>
         /// <param name="igImageContainerData"></param>
         /// <param name="callback"></param>
-        public void CreateIgImageContainer(IgImageContainerData igImageContainerData, Action<string> callback)
+        public void CreateIgImageContainer(string igUserId, IgImageContainerData igImageContainerData, Action<string> callback)
         {
             var formData = new Dictionary<string, string>()
             {
@@ -172,7 +210,7 @@ namespace Facebook
                 {"access_token", AccessTokenString }
             };
             
-            FB.API($"/{UserId}/media", HttpMethod.POST, (r)=>
+            FB.API($"/{igUserId}/media?image_url={igImageContainerData.ImageUrl}&caption={igImageContainerData.Caption}&user_tags={igImageContainerData.UserTagsToString()}", HttpMethod.POST, (r)=>
             {
                 var success = r.ResultDictionary.ContainsKey("id");
 
@@ -192,7 +230,7 @@ namespace Facebook
             Debug.Log($"Posting Image: \"{igImageContainerData.ImageUrl}\", to page {UserId}...");
         }
 
-        public void PostToInstagram(string creationId, Action<bool> callback)
+        public void PostToInstagram(string igUserId, string creationId, Action<bool> callback)
         {
             var formData = new Dictionary<string, string>()
             {
@@ -200,7 +238,7 @@ namespace Facebook
                 {"access_token", AccessTokenString }
             };
             
-            FB.API($"/{UserId}/media_publish", HttpMethod.POST, (r)=>
+            FB.API($"/{igUserId}/media_publish", HttpMethod.POST, (r)=>
             {
                 var success = r.ResultDictionary.ContainsKey("id");
                 callback?.Invoke(success);

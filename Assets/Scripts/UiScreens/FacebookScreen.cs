@@ -28,6 +28,24 @@ namespace UiScreens
             facebookService = AppController.Instance.FacebookService;
             cachedFbPages = new List<FbPage>();
         }
+        
+        protected void Start()
+        {
+            facebookService.FbLogin += OnLogin;
+            facebookService.ReceivedUserPages += PopulateDropdown;
+        }
+
+        private void OnLogin(bool success, IEnumerable<string> permissions)
+        {
+             
+        }
+
+        private void OnDestroy()
+        {
+            facebookService.FbLogin -= OnLogin;
+            facebookService.ReceivedUserPages -= PopulateDropdown;
+        }
+        
         public void PostToPage()
         {
             var hashtags = StringParser.ParseHashtags(hashTagIF.text);
@@ -43,6 +61,12 @@ namespace UiScreens
         
         private void GetPagesCallback(List<FbPage> pageIdentities)
         {
+            PopulateDropdown(pageIdentities);
+            Debug.Log(pageIdentities.Count > 0 ? "Find Groups Successful!" : "Find Groups Failure!");
+        }
+
+        private void PopulateDropdown(List<FbPage> pageIdentities)
+        {
             pageDropdown.ClearOptions();
             cachedFbPages.Clear();
             
@@ -50,8 +74,6 @@ namespace UiScreens
             var pageNames = cachedFbPages.Select(fbPage => fbPage.Name).ToList();
             
             pageDropdown.AddOptions(pageNames);
-            
-            Debug.Log(pageIdentities.Count > 0 ? "Find Groups Successful!" : "Find Groups Failure!");
         }
         
         private void PostCallback(bool success)

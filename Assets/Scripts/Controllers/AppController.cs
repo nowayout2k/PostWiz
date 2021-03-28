@@ -26,6 +26,9 @@ namespace Controllers
         
         private TwitterService twitterService;
         public TwitterService TwitterService => twitterService;
+
+        private User user;
+        public User User => user;
         
         private void Awake()
         {
@@ -36,7 +39,7 @@ namespace Controllers
             googleService = new GoogleService();
             facebookService = new FacebookService();
             twitterService = new TwitterService();
-
+            user = new User();
         }
 
         private void Start()
