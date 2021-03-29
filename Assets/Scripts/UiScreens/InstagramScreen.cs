@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.Design;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Controllers;
 using DeadMosquito.AndroidGoodies;
 using Enums;
 using Facebook;
-using Facebook.Unity;
 using TMPro;
-using Unity.Notifications.iOS;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 using Utility;
 using Screen = UiScreens.Screen;
+
 
 namespace Screens
 {

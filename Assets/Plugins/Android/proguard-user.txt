@@ -1,0 +1,11 @@
+-keep class com.facebook.** {
+   *;
+}
+
+-keep class com.twitter.** {
+   *;
+}
+
+-keep class com.google.** {
+   *;
+}
