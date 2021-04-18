@@ -18,7 +18,7 @@ namespace UiScreens
         [SerializeField] private TMP_Dropdown pageDropdown;
 
         private GoogleService googleService;
-        private List<GoogleService.YoutubeVideoData> youtubeVideosData;
+        private List<YoutubeVideoData> youtubeVideosData;
  
          
         protected override void Awake()
@@ -29,10 +29,10 @@ namespace UiScreens
 
         protected void Start()
         {
-            //googleService.OnLogin += OnLogin;
+            googleService.onGoogleLogin += GetUploadedVideos;
         }
         
-        private void PopulateDropdown(List<GoogleService.YoutubeVideoData> youtubeVideos)
+        private void PopulateDropdown(List<YoutubeVideoData> youtubeVideos)
         {
             pageDropdown.ClearOptions();
             youtubeVideosData.Clear();
@@ -56,12 +56,12 @@ namespace UiScreens
             Debug.Log(success ? "Successfully commented on video!" : "Failed to comment on video!");
         }
 
-        public void GetUploadedVideos()
+        private void GetUploadedVideos()
         {
             googleService.GetLatestVideos(ReceivedUploadedVideos);
         }
 
-        private void ReceivedUploadedVideos(List<GoogleService.YoutubeVideoData> youtubeVideos)
+        private void ReceivedUploadedVideos(List<YoutubeVideoData> youtubeVideos)
         {
             var success = youtubeVideos.Count > 0;
             PopulateDropdown(youtubeVideos);

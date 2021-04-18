@@ -1,28 +1,30 @@
-﻿ 
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
 using Controllers;
 using Google;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
- 
 
 namespace Youtube
 {
     public class GoogleService
     {
       public string WebClientId = String.Empty;
-    
-      private const string GOOGLE_API_KEY = "";
       private string accessToken;
       private GoogleSignInConfiguration configuration;
+
+      public delegate void OnGoogleLogin();
+      public event OnGoogleLogin onGoogleLogin;
+      
+      private const string BASE_URL = "https://www.googleapis.com/youtube/v3/";
+      private const string COMMENT_THREADS_ENDPOINT = "commentThreads";
+      private const string CHANNEL_ENDPOINT = "channels";
+      private const string PLAYLIST_ITEMS_ENDPOINT = "playlistItems";
+      private const string COMMENT_THREAD_ENDPOINT = "commentThreads";
       
       public void Initialize()
       {
@@ -98,8 +100,7 @@ namespace Youtube
 
         GoogleSignIn.DefaultInstance.SignInSilently().ContinueWith(OnAuthenticationFinished);
       }
-
-
+      
       public void GamesSignIn() 
       {
         GoogleSignIn.Configuration = configuration;
@@ -110,36 +111,7 @@ namespace Youtube
 
         GoogleSignIn.DefaultInstance.SignIn().ContinueWith(OnAuthenticationFinished);
       }
-
-      public class YoutubeVideoData
-      {
-        public string Id;
-        public string Kind;
-        public string Etag;
-        public string PublishedAt;
-        public string ChannelId;
-        public string Title;
-        public string DefaultThumbUrl;
-        public string MediumThumbUrl;
-        public string HighThumbUrl;
-        public string PlaylistId;
-        public string Position;
-        public string ResourceIdKind;
-        public string ResourceIdVideoId;
-      }
-
-      public class YoutubeChannelData
-      {
-        public string Id;
-        public string Kind;
-        public string Etag;
-        public string LikesChannelId;
-        public string FavoritesChannelId;
-        public string UploadsChannelId;
-        public string WatchHistoryChannelId;
-        public string WatchLaterChannelId;
-      }
-      
+ 
       public void GetLatestVideos(Action<List<YoutubeVideoData>> callback)
       {
         AppController.Instance.StartCoroutine(GetChannelUploadedVideos(callback));
@@ -154,81 +126,120 @@ namespace Youtube
           callback(null);
         }
         yield return GetUploadedVideosData(playlistId,callback);
- 
       }
-      
+
       private IEnumerator GetChannelData(Action<YoutubeChannelData> callback)
       {
-        UnityWebRequest channelDataRequest = UnityWebRequest.Get($"https://www.googleapis.com/youtube/v3/channels?part=contentDetails&mine=true&key={GOOGLE_API_KEY}");
-        channelDataRequest.SetRequestHeader("Authorization", $"Bearer [{accessToken}]");
-
-        yield return channelDataRequest.SendWebRequest();
-
-
-        if (channelDataRequest.isNetworkError || channelDataRequest.isHttpError)
+        var headers = new Dictionary<string, string>
         {
-          callback(null);
-          Debug.Log(channelDataRequest.error);
-        }
-        else
-        {
-          callback(new YoutubeChannelData());
-          Debug.Log(" complete!");
-        }
+          {"Authorization", $"Bearer [{accessToken}]"}
+        };
+        yield return GetRequest( BASE_URL + CHANNEL_ENDPOINT + $"?part=contentDetails&mine=true&key={configuration.WebClientId}", headers,
+          (b, objects) =>
+          {
+            callback(b ? null : new YoutubeChannelData(objects));
+          });
       }
 
       private IEnumerator GetUploadedVideosData(string playlistId, Action<List<YoutubeVideoData>> callback)
       {
-        UnityWebRequest playListItemsRequest = UnityWebRequest.Get($"https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId={playlistId}&key={GOOGLE_API_KEY}");
-        playListItemsRequest.SetRequestHeader("Authorization", $"Bearer [{accessToken}]");
-
-        yield return playListItemsRequest.SendWebRequest();
-          
-        if (playListItemsRequest.isNetworkError || playListItemsRequest.isHttpError)
+        var headers = new Dictionary<string, string>
         {
-          callback(null);
-          Debug.Log(playListItemsRequest.error);
-        }
-        else
-        {
-          callback(new List<YoutubeVideoData>());
-          Debug.Log(" complete!");
-        }
+          {"Authorization", $"Bearer [{accessToken}]"}
+        };
+        yield return GetRequest(BASE_URL+PLAYLIST_ITEMS_ENDPOINT+$"?part=snippet&maxResults=50&playlistId={playlistId}&key={configuration.WebClientId}", headers,
+          (b, dict) =>
+          {
+            if (b)
+            {
+              callback(null);
+            }
+            else
+            {
+              var videos = new List<YoutubeVideoData>();
+              foreach (var obj in dict)
+              {
+                if (obj.Value is Dictionary<string, object> subDict)
+                {
+                  videos.Add(new YoutubeVideoData(subDict));
+                }
+              }
+              callback(videos);
+            }
+          });
       }
-      
+
       public void CommentOnVideo(string videoId, string commentText, Action<bool> callback)
       {
-        AppController.Instance.StartCoroutine(Upload(videoId, commentText, callback));
-      }
-
-      private IEnumerator Upload(string videoId, string commentText, Action<bool> callback)
-      {
+        var headers = new Dictionary<string, string>
+        {
+          {"Authorization", $"Bearer [{accessToken}]"},
+          {"Accept", $"application/json"},
+          {"Content-Type", $"application/json"}
+        };
         var formData = new List<IMultipartFormSection>
         {
           new MultipartFormFileSection("snippet.videoId", videoId),
           new MultipartFormFileSection("snippet.topLevelComment.snippet.textOriginal", commentText)
         };
- 
-        UnityWebRequest request = UnityWebRequest.Post($"https://youtube.googleapis.com/youtube/v3/commentThreads?part=snippet&key={GOOGLE_API_KEY}", formData);
-        request.SetRequestHeader("Authorization", $"Bearer [{accessToken}]");
-        request.SetRequestHeader("Accept", $"application/json");
-        request.SetRequestHeader("Content-Type", $"application/json");
-
-        yield return request.SendWebRequest();
-
-        if (request.isNetworkError || request.isHttpError)
+        AppController.Instance.StartCoroutine(Upload(BASE_URL+COMMENT_THREADS_ENDPOINT+$"?part=snippet&key={configuration.WebClientId}",formData, headers,(b) =>
         {
-          callback(false);
-          Debug.Log(request.error);
-        }
-        else
+          callback(b);
+          Debug.Log($"commented on video {(b ? "successfully":"unsuccessfully")}");
+        }));
+      }
+
+      private IEnumerator Upload(string uri, List<IMultipartFormSection> formData, Dictionary<string, string> headers, Action<bool> callback)
+      {
+        UnityWebRequest request = UnityWebRequest.Post(BASE_URL+COMMENT_THREAD_ENDPOINT+$"?part=snippet&key={configuration.WebClientId}", formData);
+
+        foreach (var header in headers)
         {
-          callback(true);
-          Debug.Log("Form upload complete!");
+          request.SetRequestHeader(header.Key, header.Value);
         }
         
+        using (UnityWebRequest www = UnityWebRequest.Post(uri, formData))
+        {
+          yield return www.SendWebRequest();
+
+          if (www.isNetworkError || www.isHttpError)
+          {
+            Debug.Log(www.error);
+            callback(false);
+          }
+          else
+          {
+            Debug.Log("Form upload complete!");
+            callback(true);
+          }
+        }
       }
- 
+      
+      private IEnumerator GetRequest(string uri, Dictionary<string, string> headers, Action<bool, Dictionary<string, object>> callback)
+      {
+        using (UnityWebRequest webRequest = UnityWebRequest.Get(uri))
+        {
+          foreach (var header in headers)
+          {
+            webRequest.SetRequestHeader(header.Key, header.Value);
+          }
+          
+          // Request and wait for the desired page.
+          yield return webRequest.SendWebRequest();
+
+          if (webRequest.isNetworkError)
+          {
+            callback(false, null);
+            Debug.Log(": Error: " + webRequest.error);
+          }
+          else
+          {
+            Debug.Log(":\nReceived: " + webRequest.downloadHandler.text);
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(webRequest.downloadHandler.text);
+            callback(true, dict);
+          }
+        }
+      }
     }
 }
  
